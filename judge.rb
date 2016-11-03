@@ -1,4 +1,6 @@
 #!/usr/bin/ruby
+require 'active_support'
+require 'active_support/core_ext'
 class Judge
   NAME_LIST = {}
   MAX_SIZE = 2
@@ -7,7 +9,6 @@ class Judge
     open("file.txt").each do |line|
       father, son = line.chomp!.split(",")
       NAME_LIST[father] ||= []
-      binding.pry
       NAME_LIST[father] << son
     end
     NAME_LIST.freeze
@@ -32,7 +33,6 @@ class Judge
         "#{@names.size+1}人目の名前を入力してください"
       when :connection
         key = self.get_connection
-        binding.pry
         if key
           puts key.capitalize
         else
@@ -43,9 +43,7 @@ class Judge
 
   def get_connection
     %w{me father son}.each do |key|
-    binding.pry
       if self.send("#{key}?")
-        binding.pry
         return key
       end
     end
@@ -65,19 +63,16 @@ class Judge
   end
   def son?
     if sons = self.sons(@names[0])
-      return sons.include?(@names[1])
+      sons.include?(@names[1])
+    else
+      false
     end
-    false
   end
   def father(str)
-  binding.pry
-    NAME_LIST.select{|list| list.values.find{|name| name == str} }.try(:key)
+    NAME_LIST.find{|key, list| key if list.include?(str) }.try(:first)
   end
 
   def sons(str)
-  binding.pry
-    if NAME_LIST.key?(str)
-      NAME_LIST[str]
-    end   
+    NAME_LIST[str] if NAME_LIST.key?(str)
   end
 end
