@@ -42,7 +42,7 @@ class Judge
   end
 
   def get_connection
-    %w{me father son}.each do |key|
+    %w{me father son uncle}.each do |key|
       if self.send("#{key}?")
         return key
       end
@@ -61,12 +61,18 @@ class Judge
     END
     class_eval helper, __FILE__, __LINE__
   end
-  def son?
-    if sons = self.sons(@names[0])
-      sons.include?(@names[1])
-    else
-      false
-    end
+
+  %w{son uncle}.each do |type|
+    helper = <<-END
+      def #{type}?
+        if values = self.send("#{type.pluralize}", @names[0])
+          values.include?(@names[1])
+        else
+          false
+        end
+      end
+    END
+    class_eval helper, __FILE__, __LINE__
   end
   def father(str)
     NAME_LIST.find{|key, list| key if list.include?(str) }.try(:first)
@@ -74,5 +80,15 @@ class Judge
 
   def sons(str)
     NAME_LIST[str] if NAME_LIST.key?(str)
+  end
+
+  def uncles(str)
+    if father = self.father(str)
+      binding.pry
+      if grandfather = self.father(father)
+        binding.pry
+        self.sons(grandfather).reject{|son| son == father }
+      end
+    end
   end
 end
