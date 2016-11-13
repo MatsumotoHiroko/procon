@@ -2,18 +2,23 @@
 require "./error_module"
 require "./judge"
 include ErrorModule
-judge = Judge.new
 
-input_names = []
 loop do
-  puts judge.message(:input_wait)
-  str = STDIN.gets.chomp!
-  if judge.valid?(str)
-    judge.input(str)
-    break if judge.max_size?
-  else
-    puts error_msg(:name_invalid)
+  judge = Judge.new
+  input_names = []
+  loop do
+    puts judge.message(:input_wait)
+    str = STDIN.gets.chomp!
+    if judge.valid?(str)
+      judge.input(str)
+      break if judge.max_size?
+    else
+      puts error_msg(:name_invalid)
+    end
   end
-end
+  
+  judge.message(:connection)
 
-judge.message(:connection)
+  str = STDIN.gets.chomp!
+  break if str == "E"
+end

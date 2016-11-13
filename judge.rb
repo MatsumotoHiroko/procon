@@ -16,7 +16,7 @@ class Judge
   end
 
   def valid?(str)
-    NAME_LIST.key?(str) or NAME_LIST.value?(str)
+    NAME_LIST.key?(str) or NAME_LIST.values.any?{|value| value.include?(str)}
   end
 
   def input(str)
@@ -35,6 +35,7 @@ class Judge
         key = self.get_connection
         if key
           puts key.capitalize
+          puts "[E]=exit Other button=retry"
         else
           puts "関係が存在しません"
         end
@@ -42,7 +43,7 @@ class Judge
   end
 
   def get_connection
-    %w{me father son uncle}.each do |key|
+    %w{me father son uncle cousin brother nephew}.each do |key|
       if self.send("#{key}?")
         return key
       end
@@ -62,7 +63,7 @@ class Judge
     class_eval helper, __FILE__, __LINE__
   end
 
-  %w{son uncle}.each do |type|
+  %w{son uncle cousin brother nephew}.each do |type|
     helper = <<-END
       def #{type}?
         if values = self.send("#{type.pluralize}", @names[0])
@@ -75,20 +76,44 @@ class Judge
     class_eval helper, __FILE__, __LINE__
   end
   def father(str)
-    NAME_LIST.find{|key, list| key if list.include?(str) }.try(:first)
+    NAME_LIST.find{|key, list| 
+    key if list.include?(str) }.try(:first)
   end
 
   def sons(str)
-    NAME_LIST[str] if NAME_LIST.key?(str)
+    NAME_LIST.key?(str) ? NAME_LIST[str] : []
   end
 
   def uncles(str)
     if father = self.father(str)
-      binding.pry
       if grandfather = self.father(father)
-        binding.pry
-        self.sons(grandfather).reject{|son| son == father }
+        return self.sons(grandfather).reject{|son| son == father }
       end
     end
+    []
+  end
+
+  def cousins(str)
+    cousins = []
+    self.uncles(str).each do |uncle|
+      cousins += self.sons(uncle)
+    end
+    cousins
+  end
+
+  def brothers(str)
+    if father = self.father(str)
+      self.sons(father).reject{|son| son == str }
+    else
+      []
+    end
+  end
+
+  def nephews(str)
+    nephews = []
+    self.brothers(str).each do |brother|
+      nephews += self.nephews(brother)
+    end
+    nephews
   end
 end
