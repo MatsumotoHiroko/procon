@@ -35,10 +35,20 @@ class Judge
         key = self.get_connection
         if key
           puts key.capitalize
-          puts "[E]=exit Other button=retry"
         else
           puts "関係が存在しません"
         end
+      when :degrees_of_relationship
+        unless self.me?
+          degrees_of_relationship = self.get_degrees_of_relationship(@names[0], @names[1])
+          if degrees_of_relationship
+            puts "#{degrees_of_relationship}親等です"
+          else
+            puts "関係が存在しません"
+          end
+        end
+      when :push_key
+        puts "[E]=exit Other button=retry"
     end
   end
 
@@ -112,8 +122,23 @@ class Judge
   def nephews(str)
     nephews = []
     self.brothers(str).each do |brother|
-      nephews += self.nephews(brother)
+      nephews += self.sons(brother)
     end
     nephews
+  end
+
+  def get_degrees_of_relationship(str, search_str, count=0, searched_str=[])
+    near_relations = self.sons(str) 
+    near_relations += [self.father(str)] if self.father(str)
+    near_relations = near_relations.reject{|relation| searched_str.include? relation} if searched_str.present?
+    near_relations.each do |man|
+      if man == search_str
+        return count+1
+      else
+        searched_str << man
+        self.get_degrees_of_relationship(man, search_str, count+1, searched_str)
+      end
+    end
+    binding.pry
   end
 end
